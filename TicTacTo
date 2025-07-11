@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diptanu's Tic Tac Toe </title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    td {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #333;
+      font-size: 2rem;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+    td.taken {
+      cursor: not-allowed;
+      color: #888;
+    }
+    h2 {
+      color: green;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe (Minimax AI)</h1>
+  <table id="board"></table>
+  <h2 id="message"></h2>
+  <button onclick="restartGame()">Restart</button>
+
+  <script>
+    let board = [
+      [' ', ' ', ' '],
+      [' ', ' ', ' '],
+      [' ', ' ', ' ']
+    ];
+
+    const table = document.getElementById("board");
+    const message = document.getElementById("message");
+
+    function renderBoard() {
+      table.innerHTML = "";
+      for (let i = 0; i < 3; i++) {
+        const row = table.insertRow();
+        for (let j = 0; j < 3; j++) {
+          const cell = row.insertCell();
+          cell.textContent = board[i][j];
+          if (board[i][j] === ' ' && !isGameOver(board)) {
+            cell.onclick = () => playerMove(i, j);
+          } else {
+            cell.classList.add("taken");
+          }
+        }
+      }
+    }
+
+    function restartGame() {
+      board = [
+        [' ', ' ', ' '],
+        [' ', ' ', ' '],
+        [' ', ' ', ' ']
+      ];
+      message.textContent = "";
+      renderBoard();
+    }
+
+    function playerMove(i, j) {
+      if (board[i][j] !== ' ') return;
+
+      board[i][j] = 'X';
+      renderBoard();
+
+      if (checkWinner(board) || isDraw(board)) {
+        showGameOver();
+        return;
+      }
+
+      setTimeout(() => {
+        const bestMove = getBestMove(board);
+        if (bestMove) board[bestMove.i][bestMove.j] = '0';
+        renderBoard();
+        if (checkWinner(board) || isDraw(board)) showGameOver();
+      }, 500);
+    }
+
+    function showGameOver() {
+      const winner = checkWinner(board);
+      if (winner) {
+        message.textContent = winner === 'X' ? "You Win!" : "Computer Wins!";
+      } else {
+        message.textContent = "It's a Draw!";
+      }
+    }
+
+    function isDraw(board) {
+      return board.flat().every(c => c !== ' ') && !checkWinner(board);
+    }
+
+    function checkWinner(b) {
+      for (let i = 0; i < 3; i++) {
+        if (b[i][0] !== ' ' && b[i][0] === b[i][1] && b[i][1] === b[i][2]) return b[i][0];
+        if (b[0][i] !== ' ' && b[0][i] === b[1][i] && b[1][i] === b[2][i]) return b[0][i];
+      }
+      if (b[0][0] !== ' ' && b[0][0] === b[1][1] && b[1][1] === b[2][2]) return b[0][0];
+      if (b[2][0] !== ' ' && b[2][0] === b[1][1] && b[1][1] === b[0][2]) return b[2][0];
+      return null;
+    }
+
+    function isGameOver(b) {
+      return checkWinner(b) !== null || isDraw(b);
+    }
+
+    function getBestMove(b) {
+      let bestScore = -Infinity;
+      let move = null;
+
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (b[i][j] === ' ') {
+            b[i][j] = '0';
+            let score = minimax(b, 0, false);
+            b[i][j] = ' ';
+            if (score > bestScore) {
+              bestScore = score;
+              move = { i, j };
+            }
+          }
+        }
+      }
+      return move;
+    }
+
+    function minimax(b, depth, isMaximizing) {
+      const winner = checkWinner(b);
+      if (winner === '0') return 10 - depth;
+      if (winner === 'X') return depth - 10;
+      if (isDraw(b)) return 0;
+
+      if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (b[i][j] === ' ') {
+              b[i][j] = '0';
+              const eval = minimax(b, depth + 1, false);
+              b[i][j] = ' ';
+              maxEval = Math.max(maxEval, eval);
+            }
+          }
+        }
+        return maxEval;
+      } else {
+        let minEval = Infinity;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (b[i][j] === ' ') {
+              b[i][j] = 'X';
+              const eval = minimax(b, depth + 1, true);
+              b[i][j] = ' ';
+              minEval = Math.min(minEval, eval);
+            }
+          }
+        }
+        return minEval;
+      }
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
